@@ -1,0 +1,51 @@
+# ==============================================================================
+# LUNARIS MediaMTX Configuration
+# High-Performance RTSP / WebRTC / HLS Video Streaming Server for Bus Fleet
+# ==============================================================================
+
+# Global log level
+logLevel: info
+logDestinations: [stdout]
+
+# RTSP Server
+rtsp: yes
+protocols: [tcp, udp]
+rtspAddress: :8554
+
+# WebRTC Server (for direct browser live streaming)
+webrtc: yes
+webrtcAddress: :8889
+webrtcAllowOrigins: ['*']
+webrtcEncryption: no
+webrtcLocalUDPAddress: :8189
+webrtcIPsFromInterfaces: yes
+
+# HLS Server
+hls: yes
+hlsAddress: :8888
+hlsAlwaysRemux: yes
+hlsVariant: lowLatency
+
+# Control API
+api: yes
+apiAddress: :9997
+
+# Stream Paths Definition
+paths:
+  # All bus streams fallback
+  all_others:
+
+  # Dedicated bus camera endpoints
+  bus07:
+    source: publisher
+    runOnInit: ""
+    runOnInitRestart: no
+
+  bus12:
+    source: publisher
+
+  bus15:
+    source: publisher
+
+  bus21:
+    source: publisher

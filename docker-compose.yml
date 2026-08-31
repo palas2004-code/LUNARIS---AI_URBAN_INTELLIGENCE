@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  # 1. MediaMTX RTSP / WebRTC Video Streaming Gateway
+  mediamtx:
+    image: bluenviron/mediamtx:latest
+    container_name: lunaris-mediamtx
+    restart: unless-stopped
+    ports:
+      - "8554:8554"   # RTSP
+      - "8888:8888"   # HLS
+      - "8889:8889"   # WebRTC WHEP / WHIP
+      - "8189:8189/udp" # WebRTC UDP
+      - "9997:9997"   # MediaMTX API
+    volumes:
+      - ./mediamtx/mediamtx.yml:/mediamtx.yml
+
+  # 2. FastAPI Central Backend Server
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: lunaris-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - SUPABASE_URL=https://ecmtwoccsdlhphdlutmz.supabase.co
+      - SUPABASE_KEY=sb_publishable_l4l1lR2MLi_WOwtjs4CxTw_yBjCx01G
+      - MEDIAMTX_RTSP_URL=rtsp://mediamtx:8554
+      - MEDIAMTX_WEBRTC_URL=http://mediamtx:8889
+    depends_on:
+      - mediamtx
+
+  # 3. Python YOLO + OpenCV Edge AI Worker
+  ai-worker:
+    build:
+      context: .
+      dockerfile: ai_worker/Dockerfile
+    container_name: lunaris-ai-worker
+    restart: unless-stopped
+    environment:
+      - FASTAPI_BACKEND_URL=http://backend:8000/api/v1
+      - RTSP_STREAM_URL=rtsp://mediamtx:8554/bus07
+      - BUS_ID=BUS-07
+    depends_on:
+      - backend
+      - mediamtx
+
+  # 4. LUNARIS Frontend Command Dashboard
+  frontend:
+    image: nginx:alpine
+    container_name: lunaris-frontend
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/usr/share/nginx/html:ro

@@ -1,0 +1,30 @@
+{
+  "name": "lunaris-urban-intelligence",
+  "version": "2.6.4",
+  "description": "LUNARIS — AI Mobile Urban Intelligence Command Platform (SIH 2026 SIH26124)",
+  "main": "supabaseClient.js",
+  "scripts": {
+    "start": "python -m http.server 8080",
+    "backend": "uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload",
+    "ai:worker": "python -m ai_worker.detector",
+    "docker:up": "docker compose up -d"
+  },
+  "dependencies": {
+    "@supabase/server": "^0.1.0",
+    "@supabase/supabase-js": "^2.49.1"
+  },
+  "devDependencies": {
+    "dotenv": "^16.4.5"
+  },
+  "keywords": [
+    "smart-city",
+    "edge-ai",
+    "yolov8",
+    "supabase",
+    "webrtc",
+    "mediamtx",
+    "sih2026"
+  ],
+  "author": "LUNARIS Team",
+  "license": "MIT"
+}

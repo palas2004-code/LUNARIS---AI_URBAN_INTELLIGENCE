@@ -1,0 +1,28 @@
+# Environment files (NEVER commit secrets or API keys)
+.env
+.env.local
+.env.*.local
+*.env
+
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+
+# Logs & build artifacts
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dist/
+build/
+.cache/
+
+# OS specific files
+.DS_Store
+Thumbs.db
