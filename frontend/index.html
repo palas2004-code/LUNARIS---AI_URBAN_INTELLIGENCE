@@ -340,98 +340,98 @@
         <section class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3.5 md:gap-4">
           
           <!-- Card 1: Total Incidents -->
-          <div class="kpi-card group bg-gradient-to-b from-navy-900 to-navy-850 p-4 rounded-2xl border border-navy-800 hover:border-blue-500/40 shadow-lg relative overflow-hidden transition-all duration-200 hover:-translate-y-1">
-            <div class="absolute -right-6 -bottom-6 w-20 h-20 bg-blue-600/10 rounded-full blur-xl group-hover:bg-blue-600/20 transition"></div>
+          <div onclick="openKpiDrilldownModal('TOTAL')" class="kpi-card group bg-gradient-to-b from-navy-900 to-navy-850 p-4 rounded-2xl border border-navy-800 hover:border-blue-500/60 shadow-lg relative overflow-hidden transition-all duration-200 hover:-translate-y-1 cursor-pointer active:scale-95" title="Click to view all city road incidents">
+            <div class="absolute -right-6 -bottom-6 w-20 h-20 bg-blue-600/10 rounded-full blur-xl group-hover:bg-blue-600/25 transition"></div>
             <div class="flex items-center justify-between mb-2">
-              <span class="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-bold">TOTAL INCIDENTS</span>
+              <span class="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-bold group-hover:text-blue-300 transition">TOTAL INCIDENTS</span>
               <div class="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <i data-lucide="layers" class="w-4 h-4"></i>
               </div>
             </div>
             <div class="text-2xl lg:text-3xl font-black text-white tracking-tight font-mono mb-1" id="kpi-total-incidents">0</div>
-            <div class="flex items-center gap-1.5 text-[11px] font-mono text-emerald-400">
-              <i data-lucide="database" class="w-3.5 h-3.5"></i>
-              <span class="font-bold">Supabase Synced</span>
+            <div class="flex items-center justify-between text-[11px] font-mono text-emerald-400">
+              <span class="flex items-center gap-1"><i data-lucide="database" class="w-3.5 h-3.5"></i> <strong class="font-bold">Supabase Synced</strong></span>
+              <span class="text-[10px] text-slate-400 group-hover:text-cyan-300 underline font-sans">View &rarr;</span>
             </div>
           </div>
 
           <!-- Card 2: Unresolved -->
-          <div class="kpi-card group bg-gradient-to-b from-navy-900 to-navy-850 p-4 rounded-2xl border border-navy-800 hover:border-amber-500/40 shadow-lg relative overflow-hidden transition-all duration-200 hover:-translate-y-1">
-            <div class="absolute -right-6 -bottom-6 w-20 h-20 bg-amber-500/10 rounded-full blur-xl group-hover:bg-amber-500/20 transition"></div>
+          <div onclick="openKpiDrilldownModal('UNRESOLVED')" class="kpi-card group bg-gradient-to-b from-navy-900 to-navy-850 p-4 rounded-2xl border border-navy-800 hover:border-amber-500/60 shadow-lg relative overflow-hidden transition-all duration-200 hover:-translate-y-1 cursor-pointer active:scale-95" title="Click to view unresolved defects pending review">
+            <div class="absolute -right-6 -bottom-6 w-20 h-20 bg-amber-500/10 rounded-full blur-xl group-hover:bg-amber-500/25 transition"></div>
             <div class="flex items-center justify-between mb-2">
-              <span class="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-bold">UNRESOLVED</span>
+              <span class="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-bold group-hover:text-amber-300 transition">UNRESOLVED</span>
               <div class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <i data-lucide="clock" class="w-4 h-4"></i>
               </div>
             </div>
             <div class="text-2xl lg:text-3xl font-black text-amber-400 tracking-tight font-mono mb-1" id="kpi-unresolved">0</div>
-            <div class="flex items-center gap-1.5 text-[11px] font-mono text-amber-400">
-              <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>
-              <span class="font-bold">Pending Review</span>
+            <div class="flex items-center justify-between text-[11px] font-mono text-amber-400">
+              <span class="flex items-center gap-1"><i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> <strong class="font-bold">Pending Review</strong></span>
+              <span class="text-[10px] text-slate-400 group-hover:text-amber-300 underline font-sans">View &rarr;</span>
             </div>
           </div>
 
           <!-- Card 3: In Progress -->
-          <div class="kpi-card group bg-gradient-to-b from-navy-900 to-navy-850 p-4 rounded-2xl border border-navy-800 hover:border-cyan-500/40 shadow-lg relative overflow-hidden transition-all duration-200 hover:-translate-y-1">
-            <div class="absolute -right-6 -bottom-6 w-20 h-20 bg-cyan-500/10 rounded-full blur-xl group-hover:bg-cyan-500/20 transition"></div>
+          <div onclick="openKpiDrilldownModal('IN_PROGRESS')" class="kpi-card group bg-gradient-to-b from-navy-900 to-navy-850 p-4 rounded-2xl border border-navy-800 hover:border-cyan-500/60 shadow-lg relative overflow-hidden transition-all duration-200 hover:-translate-y-1 cursor-pointer active:scale-95" title="Click to view defects under active repair">
+            <div class="absolute -right-6 -bottom-6 w-20 h-20 bg-cyan-500/10 rounded-full blur-xl group-hover:bg-cyan-500/25 transition"></div>
             <div class="flex items-center justify-between mb-2">
-              <span class="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-bold">IN PROGRESS</span>
+              <span class="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-bold group-hover:text-cyan-300 transition">IN PROGRESS</span>
               <div class="w-8 h-8 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <i data-lucide="loader" class="w-4 h-4 animate-spin-slow"></i>
               </div>
             </div>
             <div class="text-2xl lg:text-3xl font-black text-cyan-400 tracking-tight font-mono mb-1" id="kpi-inprogress">0</div>
-            <div class="flex items-center gap-1.5 text-[11px] font-mono text-cyan-300">
-              <i data-lucide="truck" class="w-3.5 h-3.5"></i>
-              <span class="font-bold">Crews Deployed</span>
+            <div class="flex items-center justify-between text-[11px] font-mono text-cyan-300">
+              <span class="flex items-center gap-1"><i data-lucide="truck" class="w-3.5 h-3.5"></i> <strong class="font-bold">Crews Deployed</strong></span>
+              <span class="text-[10px] text-slate-400 group-hover:text-cyan-300 underline font-sans">View &rarr;</span>
             </div>
           </div>
 
           <!-- Card 4: Resolved -->
-          <div class="kpi-card group bg-gradient-to-b from-navy-900 to-navy-850 p-4 rounded-2xl border border-navy-800 hover:border-emerald-500/40 shadow-lg relative overflow-hidden transition-all duration-200 hover:-translate-y-1">
-            <div class="absolute -right-6 -bottom-6 w-20 h-20 bg-emerald-500/10 rounded-full blur-xl group-hover:bg-emerald-500/20 transition"></div>
+          <div onclick="openKpiDrilldownModal('RESOLVED')" class="kpi-card group bg-gradient-to-b from-navy-900 to-navy-850 p-4 rounded-2xl border border-navy-800 hover:border-emerald-500/60 shadow-lg relative overflow-hidden transition-all duration-200 hover:-translate-y-1 cursor-pointer active:scale-95" title="Click to view resolved defects with before/after photos">
+            <div class="absolute -right-6 -bottom-6 w-20 h-20 bg-emerald-500/10 rounded-full blur-xl group-hover:bg-emerald-500/25 transition"></div>
             <div class="flex items-center justify-between mb-2">
-              <span class="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-bold">RESOLVED</span>
+              <span class="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-bold group-hover:text-emerald-300 transition">RESOLVED</span>
               <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <i data-lucide="check-circle" class="w-4 h-4"></i>
               </div>
             </div>
             <div class="text-2xl lg:text-3xl font-black text-emerald-400 tracking-tight font-mono mb-1" id="kpi-resolved">0</div>
-            <div class="flex items-center gap-1.5 text-[11px] font-mono text-emerald-400">
-              <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
-              <span class="font-bold">Verified Fixes</span>
+            <div class="flex items-center justify-between text-[11px] font-mono text-emerald-400">
+              <span class="flex items-center gap-1"><i data-lucide="shield-check" class="w-3.5 h-3.5"></i> <strong class="font-bold">Verified Fixes</strong></span>
+              <span class="text-[10px] text-slate-400 group-hover:text-emerald-300 underline font-sans">View &rarr;</span>
             </div>
           </div>
 
           <!-- Card 5: Critical Alerts -->
-          <div class="kpi-card group bg-gradient-to-b from-navy-900 to-navy-850 p-4 rounded-2xl border border-navy-800 hover:border-red-500/40 shadow-lg relative overflow-hidden transition-all duration-200 hover:-translate-y-1">
-            <div class="absolute -right-6 -bottom-6 w-20 h-20 bg-red-500/10 rounded-full blur-xl group-hover:bg-red-500/20 transition"></div>
+          <div onclick="openKpiDrilldownModal('CRITICAL')" class="kpi-card group bg-gradient-to-b from-navy-900 to-navy-850 p-4 rounded-2xl border border-navy-800 hover:border-red-500/60 shadow-lg relative overflow-hidden transition-all duration-200 hover:-translate-y-1 cursor-pointer active:scale-95" title="Click to view urgent critical priority alerts">
+            <div class="absolute -right-6 -bottom-6 w-20 h-20 bg-red-500/10 rounded-full blur-xl group-hover:bg-red-500/25 transition"></div>
             <div class="flex items-center justify-between mb-2">
-              <span class="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-bold">CRITICAL ALERTS</span>
+              <span class="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-bold group-hover:text-red-300 transition">CRITICAL ALERTS</span>
               <div class="w-8 h-8 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <i data-lucide="alert-octagon" class="w-4 h-4 animate-pulse"></i>
               </div>
             </div>
             <div class="text-2xl lg:text-3xl font-black text-red-500 tracking-tight font-mono mb-1" id="kpi-critical">0</div>
-            <div class="flex items-center gap-1.5 text-[11px] font-mono text-red-400">
-              <i data-lucide="zap" class="w-3.5 h-3.5"></i>
-              <span class="font-bold">Urgent Action</span>
+            <div class="flex items-center justify-between text-[11px] font-mono text-red-400">
+              <span class="flex items-center gap-1"><i data-lucide="zap" class="w-3.5 h-3.5"></i> <strong class="font-bold">Urgent Action</strong></span>
+              <span class="text-[10px] text-slate-400 group-hover:text-red-300 underline font-sans">View &rarr;</span>
             </div>
           </div>
 
           <!-- Card 6: Active Buses -->
-          <div class="kpi-card group bg-gradient-to-b from-navy-900 to-navy-850 p-4 rounded-2xl border border-navy-800 hover:border-cyan-500/40 shadow-lg relative overflow-hidden transition-all duration-200 hover:-translate-y-1">
-            <div class="absolute -right-6 -bottom-6 w-20 h-20 bg-cyan-500/10 rounded-full blur-xl group-hover:bg-cyan-500/20 transition"></div>
+          <div onclick="openKpiDrilldownModal('BUSES')" class="kpi-card group bg-gradient-to-b from-navy-900 to-navy-850 p-4 rounded-2xl border border-navy-800 hover:border-cyan-500/60 shadow-lg relative overflow-hidden transition-all duration-200 hover:-translate-y-1 cursor-pointer active:scale-95" title="Click to view live bus fleet telemetry and cameras">
+            <div class="absolute -right-6 -bottom-6 w-20 h-20 bg-cyan-500/10 rounded-full blur-xl group-hover:bg-cyan-500/25 transition"></div>
             <div class="flex items-center justify-between mb-2">
-              <span class="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-bold">ACTIVE BUSES</span>
+              <span class="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-bold group-hover:text-cyan-300 transition">ACTIVE BUSES</span>
               <div class="w-8 h-8 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <i data-lucide="bus" class="w-4 h-4"></i>
               </div>
             </div>
             <div class="text-2xl lg:text-3xl font-black text-white tracking-tight font-mono mb-1" id="kpi-buses">0</div>
-            <div class="flex items-center gap-1.5 text-[11px] font-mono text-cyan-400">
-              <i data-lucide="wifi" class="w-3.5 h-3.5"></i>
-              <span class="font-bold">Fleet Telemetry</span>
+            <div class="flex items-center justify-between text-[11px] font-mono text-cyan-400">
+              <span class="flex items-center gap-1"><i data-lucide="wifi" class="w-3.5 h-3.5"></i> <strong class="font-bold">Fleet Telemetry</strong></span>
+              <span class="text-[10px] text-slate-400 group-hover:text-cyan-300 underline font-sans">View &rarr;</span>
             </div>
           </div>
 
@@ -1716,6 +1716,53 @@
         <button onclick="window.open('mobile_camera.html', '_blank')" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-center shadow-lg transition flex items-center justify-center gap-2">
           <i data-lucide="external-link" class="w-4 h-4"></i>
           <span>Open Mobile View in New Tab</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================== -->
+  <!-- MODAL: KPI METRIC DRILLDOWN (FULL INTERACTIVE DATA AUDIT)                  -->
+  <!-- ========================================================================== -->
+  <div id="kpi-drilldown-modal" class="fixed inset-0 bg-navy-950/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-navy-900 border border-navy-750 rounded-2xl max-w-4xl w-full p-6 shadow-2xl relative animate-fadeIn font-mono text-xs space-y-4 max-h-[90vh] flex flex-col">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-3 border-b border-navy-800 flex-shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-blue-500/20 text-cyan-400 border border-blue-500/30 flex items-center justify-center" id="kpi-modal-icon">
+            <i data-lucide="layers" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-sm md:text-base font-bold text-white uppercase" id="kpi-modal-title">TOTAL ROAD DEFECTS AUDIT</h3>
+            <p class="text-[11px] text-slate-400" id="kpi-modal-subtitle">Showing all live synced incidents in Supabase</p>
+          </div>
+        </div>
+        <button onclick="closeKpiDrilldownModal()" class="text-slate-400 hover:text-white p-1.5 rounded-lg bg-navy-800">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Quick Action / Filter Header -->
+      <div class="bg-navy-950 p-3 rounded-xl border border-navy-800 flex flex-wrap items-center justify-between gap-2 text-xs flex-shrink-0">
+        <div class="flex items-center gap-2">
+          <span class="text-slate-400 font-bold">Category:</span>
+          <span class="px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30" id="kpi-modal-badge">ALL (4)</span>
+        </div>
+        <span class="text-[11px] text-slate-400">Click any row/card to view full case & dispatch details</span>
+      </div>
+
+      <!-- Dynamic Content List Container -->
+      <div class="flex-1 overflow-y-auto space-y-2.5 pr-1 custom-scrollbar" id="kpi-modal-content-list">
+        <!-- Injected dynamically via openKpiDrilldownModal() -->
+      </div>
+
+      <!-- Footer Buttons -->
+      <div class="pt-3 border-t border-navy-800 flex items-center justify-between flex-shrink-0">
+        <span class="text-[10px] text-slate-500">Auto-synced with Supabase PostgreSQL &bull; Realtime WebSockets</span>
+        <button onclick="closeKpiDrilldownModal()" class="px-4 py-2 bg-navy-800 hover:bg-navy-750 text-slate-200 rounded-xl font-bold">
+          Close Window
         </button>
       </div>
 
