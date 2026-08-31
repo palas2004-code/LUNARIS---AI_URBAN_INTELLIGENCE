@@ -168,32 +168,56 @@ body {
   border-radius: 50%;
 }
 
-/* Bus Marker Styling */
+/* High-Visibility Live Bus Pin Styling */
 .custom-bus-pin {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.bus-marker {
-  position: relative;
-  background: #0284c7;
-  color: #ffffff;
-  border: 2px solid #ffffff;
-  padding: 3px 8px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 800;
-  font-family: 'JetBrains Mono', monospace;
-  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  white-space: nowrap;
-  transition: transform 0.2s;
-}
-.bus-marker:hover {
-  transform: scale(1.15);
+  background: transparent !important;
+  border: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   z-index: 1000 !important;
+}
+
+.bus-marker-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff !important;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 2px solid #38bdf8;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.7), 0 4px 10px rgba(0, 0, 0, 0.5);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px;
+  font-weight: 900;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+  pointer-events: auto;
+}
+
+.bus-marker-pill:hover {
+  transform: scale(1.2) translateY(-2px);
+  box-shadow: 0 0 24px rgba(0, 229, 255, 0.95), 0 8px 16px rgba(0, 0, 0, 0.6);
+  z-index: 2000 !important;
+}
+
+.bus-live-beacon {
+  width: 8px;
+  height: 8px;
+  background: #4ade80;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #4ade80;
+  display: inline-block;
+  animation: pulse-beacon 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse-beacon {
+  0% { transform: scale(0.9); opacity: 0.8; }
+  50% { transform: scale(1.4); opacity: 1; box-shadow: 0 0 12px #22c55e; }
+  100% { transform: scale(0.9); opacity: 0.8; }
 }
 
 /* Leaflet Popup Styling */

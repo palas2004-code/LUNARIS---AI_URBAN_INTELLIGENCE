@@ -12,7 +12,64 @@ const DashboardState = {
   activeTab: 'dashboard',
   selectedIncident: null,
   incidents: [],
-  buses: [],
+  buses: [
+    {
+      id: 'BUS-07',
+      bus_code: 'BUS-07',
+      plate: 'WB-04-E-2910',
+      route: 'Park Street → Esplanade',
+      camera: 'Online',
+      gps: 'Active',
+      aiStatus: 'Active',
+      coords: [22.5512, 88.3524],
+      speed: 34.2,
+      fps: 10.0,
+      lastLocation: 'Park Street Corridor',
+      lastUpdate: 'Live'
+    },
+    {
+      id: 'BUS-12',
+      bus_code: 'BUS-12',
+      plate: 'WB-04-E-3122',
+      route: 'AJC Bose Road → Sealdah',
+      camera: 'Online',
+      gps: 'Active',
+      aiStatus: 'Active',
+      coords: [22.5415, 88.3578],
+      speed: 28.5,
+      fps: 10.0,
+      lastLocation: 'AJC Bose Flyover',
+      lastUpdate: 'Live'
+    },
+    {
+      id: 'BUS-15',
+      bus_code: 'BUS-15',
+      plate: 'WB-04-E-4590',
+      route: 'Esplanade → Howrah Bridge',
+      camera: 'Online',
+      gps: 'Active',
+      aiStatus: 'Active',
+      coords: [22.5645, 88.3518],
+      speed: 19.8,
+      fps: 10.0,
+      lastLocation: 'Howrah Approach',
+      lastUpdate: 'Live'
+    },
+    {
+      id: 'BUS-21',
+      bus_code: 'BUS-21',
+      plate: 'WB-04-E-1882',
+      route: 'Salt Lake → Sector V Hub',
+      camera: 'Online',
+      gps: 'Active',
+      aiStatus: 'Active',
+      coords: [22.5760, 88.4320],
+      speed: 41.0,
+      fps: 10.0,
+      lastLocation: 'Sector V Ring Road',
+      lastUpdate: 'Live'
+    }
+  ],
   alerts: [],
   charts: {
     typeChart: null,
@@ -338,21 +395,24 @@ function renderBusMarkers() {
   DashboardState.busMarkersMap = {};
 
   DashboardState.buses.forEach(bus => {
+    const lat = Array.isArray(bus.coords) ? bus.coords[0] : (bus.latitude || 22.5512);
+    const lng = Array.isArray(bus.coords) ? bus.coords[1] : (bus.longitude || 88.3524);
+
     const busIcon = L.divIcon({
       className: 'custom-bus-pin',
       html: `
-        <div class="bus-marker">
-          <div class="bus-marker-pulse"></div>
-          <span class="bus-marker-label">${bus.id}</span>
-          <span>🚌</span>
+        <div class="bus-marker-pill">
+          <span class="bus-live-beacon"></span>
+          <span style="font-size: 13px;">🚌</span>
+          <span>${bus.id}</span>
         </div>
       `,
-      iconSize: [32, 32],
-      iconAnchor: [16, 16],
-      popupAnchor: [0, -16]
+      iconSize: [110, 36],
+      iconAnchor: [55, 18],
+      popupAnchor: [0, -18]
     });
 
-    const marker = L.marker(bus.coords, { icon: busIcon });
+    const marker = L.marker([lat, lng], { icon: busIcon, zIndexOffset: 1000 });
     marker.bindPopup(generateBusPopupHtml(bus));
     
     DashboardState.busMarkersMap[bus.id] = marker;
@@ -1038,6 +1098,10 @@ function initKolkataMap() {
     "⚠️ AI Defect Markers": DashboardState.markersLayer,
     "🚌 Public Bus Fleet": DashboardState.busesLayer
   }, { position: 'topright' }).addTo(DashboardState.map);
+
+  // Render initial Bus Fleet & Incident Markers immediately
+  renderBusMarkers();
+  renderIncidentMarkers();
 }
 
 function setMapBaseLayer(layerName) {
