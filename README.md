@@ -167,6 +167,50 @@ stateDiagram-v2
 
 ---
 
+## 📂 Modular Team Repository Structure
+
+The codebase is organized into **6 modular subsystem directories** for clean team collaboration:
+
+```
+LUNARIS Repository
+│
+├── main/                 # 🚀 Master Platform Launcher & Multi-Service Orchestrator
+│   └── orchestrator.py   # Entrypoint to run Web Server, AI, and Backend together
+│
+├── frontend/             # 🎨 Smart City Command HQ & Public Transparency UI
+│   ├── index.html        # Central Dashboard, GIS Engine & Citizen Portal
+│   ├── app.js            # Client-side State Controller & Realtime WebSockets
+│   ├── styles.css        # Modern Light Theme & Command Center Dark Mode
+│   └── supabaseClient.js # Supabase JS SDK Initialization
+│
+├── backend/              # ⚡ FastAPI REST API & Municipal Routing Service
+│   ├── main.py           # Application Entrypoint & Route Aggregator
+│   ├── config.py         # Security & Environment Configuration
+│   ├── database.py       # Supabase Client Adapter
+│   ├── logger.py         # Central Structured Audit Logging Engine
+│   ├── security.py       # RLS, Role Auth, Rate Limiter & Token Guards
+│   ├── privacy.py        # PII Redaction (Face & Plate Gaussian Blur)
+│   ├── email_service.py  # Resend Municipal Email Dispatch Service
+│   ├── models.py         # Pydantic Schemas & Telemetry Payloads
+│   └── routers/          # API Routers (Detections, Fleet, Incidents, Complaints, Streams)
+│
+├── ai-detection/         # 🤖 YOLOv8 Computer Vision & Defect Tracking Engine
+│   ├── stream_processor.py# Centroid Debouncer & YOLO Inference Worker (10 FPS)
+│   ├── detector.py       # Defect Classification Engine
+│   ├── yolo_engine.py    # Ultralytics Detection Pipeline
+│   └── requirements.txt  # Python AI Dependencies (OpenCV, Torch, Ultralytics)
+│
+├── live-camera/          # 🎥 4K Live Camera & Smartphone Edge Sensing WebRTC
+│   ├── live_monitoring.html# 4K Live Video Diagnostic Cockpit & YOLO Overlay
+│   ├── mobile_camera.html# Smartphone Wireless AI Sensor Cockpit
+│   └── mediamtx.yml      # MediaMTX WebRTC (WHEP) & RTSP Stream Configuration
+│
+└── database-supabase/    # 🗄️ PostgreSQL Database Schema & Security Policies
+    └── supabase_schema.sql# Complete 19-Table Schema with RLS & Realtime Publications
+```
+
+---
+
 ## 📊 City Road Defect Analytics
 
 ```mermaid

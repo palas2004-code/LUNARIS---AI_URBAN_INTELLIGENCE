@@ -1,0 +1,234 @@
+/* ==========================================================================
+   LUNARIS — AI Mobile Urban Intelligence Dashboard Styles
+   Modern Clean Light / Professional Municipal Theme + Real Google GIS
+   SIH 2026 Problem SIH26124
+   ========================================================================== */
+
+:root {
+  --bg-main: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f1f5f9;
+  --border-subtle: #e2e8f0;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  
+  --accent-cyan: #0284c7;
+  --accent-blue: #2563eb;
+  --accent-emerald: #059669;
+  --accent-amber: #d97706;
+  --accent-crimson: #dc2626;
+  --accent-purple: #7c3aed;
+}
+
+/* Dark Mode Class Support */
+.dark-theme {
+  --bg-main: #060a13;
+  --bg-card: #0e1628;
+  --bg-card-hover: #141f38;
+  --border-subtle: #1e293b;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+}
+
+body {
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  overflow-x: hidden;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(226, 232, 240, 0.6);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* KPI Cards Elevation & Styling */
+.kpi-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease-in-out;
+}
+
+.kpi-card:hover {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  transform: translateY(-2px);
+  border-color: #cbd5e1;
+}
+
+/* Animation utilities */
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-spin-slow {
+  animation: spin-slow 12s linear infinite;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes scaleUp {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+.animate-scaleUp {
+  animation: scaleUp 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ==========================================================================
+   Leaflet Map Customizations (Real Google Maps Natural Color & Crisp GIS)
+   ========================================================================== */
+.leaflet-container {
+  background-color: #e5e7eb !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+/* Clean Natural Tiles — No Inversion or Dark Filters */
+.leaflet-tile-pane {
+  filter: none !important;
+}
+
+/* Custom Marker Pins */
+.custom-leaflet-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-pin-marker {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s;
+}
+.custom-pin-marker:hover {
+  transform: scale(1.3);
+  z-index: 1000 !important;
+}
+
+.custom-pin-marker.marker-critical {
+  background: #ef4444;
+  border: 2px solid #ffffff;
+}
+.custom-pin-marker.marker-high {
+  background: #f97316;
+  border: 2px solid #ffffff;
+}
+.custom-pin-marker.marker-medium {
+  background: #eab308;
+  border: 2px solid #ffffff;
+}
+.custom-pin-marker.marker-resolved {
+  background: #10b981;
+  border: 2px solid #ffffff;
+}
+.custom-pin-marker.marker-low {
+  background: #3b82f6;
+  border: 2px solid #ffffff;
+}
+
+.custom-pin-marker .pin-ring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  animation: ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+  opacity: 0.75;
+}
+.custom-pin-marker.marker-critical .pin-ring { background: rgba(239, 68, 68, 0.4); }
+.custom-pin-marker.marker-high .pin-ring { background: rgba(249, 115, 22, 0.4); }
+.custom-pin-marker.marker-resolved .pin-ring { display: none; }
+
+.custom-pin-marker .pin-core {
+  width: 8px;
+  height: 8px;
+  background: #ffffff;
+  border-radius: 50%;
+}
+
+/* Bus Marker Styling */
+.custom-bus-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.bus-marker {
+  position: relative;
+  background: #0284c7;
+  color: #ffffff;
+  border: 2px solid #ffffff;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 800;
+  font-family: 'JetBrains Mono', monospace;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  transition: transform 0.2s;
+}
+.bus-marker:hover {
+  transform: scale(1.15);
+  z-index: 1000 !important;
+}
+
+/* Leaflet Popup Styling */
+.leaflet-popup-content-wrapper {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 14px !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+  padding: 2px !important;
+}
+.leaflet-popup-tip {
+  background: #ffffff !important;
+}
+.leaflet-container a.leaflet-popup-close-button {
+  color: #64748b !important;
+  top: 8px !important;
+  right: 8px !important;
+}
+
+/* Official Municipal Work Order Print Styles */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printable-work-order, #printable-work-order * {
+    visibility: visible;
+  }
+  #printable-work-order {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: #ffffff;
+    color: #000000;
+    padding: 20px;
+  }
+}
