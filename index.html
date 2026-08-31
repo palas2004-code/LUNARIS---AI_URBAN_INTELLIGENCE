@@ -1570,6 +1570,27 @@
             Sign In
           </button>
         </form>
+
+        <!-- 1-Click Quick Role Switcher -->
+        <div class="pt-3 border-t border-navy-800 space-y-2">
+          <div class="text-[10px] uppercase font-bold text-slate-400 text-center tracking-wider">
+            ⚡ 1-Click Quick Demo Login:
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" onclick="quickDemoLogin('admin')" class="p-2 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 font-bold text-[11px] flex items-center justify-center gap-1.5 transition">
+              <span>👑</span> <span>Admin (HQ)</span>
+            </button>
+            <button type="button" onclick="quickDemoLogin('authority')" class="p-2 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 font-bold text-[11px] flex items-center justify-center gap-1.5 transition">
+              <span>🏛️</span> <span>Authority (PWD)</span>
+            </button>
+            <button type="button" onclick="quickDemoLogin('maintenance')" class="p-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 font-bold text-[11px] flex items-center justify-center gap-1.5 transition">
+              <span>🔧</span> <span>Rapid Squad</span>
+            </button>
+            <button type="button" onclick="quickDemoLogin('viewer')" class="p-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 font-bold text-[11px] flex items-center justify-center gap-1.5 transition">
+              <span>👁️</span> <span>Citizen Viewer</span>
+            </button>
+          </div>
+        </div>
       </div>
 
     </div>
