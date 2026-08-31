@@ -29,6 +29,7 @@ const MIME_TYPES = {
 function resolveFilePath(reqPath) {
   let cleanPath = reqPath.split('?')[0];
   if (cleanPath === '/' || cleanPath === '') cleanPath = '/index.html';
+  if (cleanPath === '/login') cleanPath = '/login.html';
   if (cleanPath === '/live-monitoring') cleanPath = '/live_monitoring.html';
   if (cleanPath === '/mobile-camera') cleanPath = '/mobile_camera.html';
 

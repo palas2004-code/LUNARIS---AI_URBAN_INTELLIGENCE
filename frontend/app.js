@@ -322,7 +322,27 @@ function renderIncidentMarkers() {
       ? inc.verified_by_buses.join(', ') 
       : (inc.busId || 'BUS-07');
 
-    const popupContent = `
+    const isCitizen = (currentUserProfile?.role === 'citizen');
+
+    const popupContent = isCitizen ? `
+      <div class="p-3 font-mono text-xs text-slate-100 min-w-[240px] space-y-2">
+        <div class="flex items-center justify-between pb-1.5 border-b border-navy-700">
+          <strong class="text-cyan-400 text-sm font-black">🕳️ ${inc.type.toUpperCase()}</strong>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            ✅ VERIFIED
+          </span>
+        </div>
+        <div class="space-y-1.5 text-slate-200">
+          <div class="flex justify-between"><span class="text-slate-400">Location:</span> <strong class="text-white">${(inc.location || 'Kolkata Metropolitan Area').split(',')[0]}</strong></div>
+          <div class="flex justify-between"><span class="text-slate-400">Severity:</span> <strong class="${getSeverityColorClass(inc.severity)}">${inc.severity}</strong></div>
+          <div class="flex justify-between"><span class="text-slate-400">Status:</span> <span class="font-bold text-cyan-300">${inc.status === 'RESOLVED' ? '✅ FIXED' : '🔧 IN PROGRESS'}</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">Reported:</span> <span class="text-slate-300">${inc.detectedTime || 'Recent'}</span></div>
+        </div>
+        <div class="pt-2 border-t border-navy-700 text-center text-[10px] text-slate-400">
+          Public Road Safety Intelligence &bull; KMC
+        </div>
+      </div>
+    ` : `
       <div class="p-3.5 font-mono text-xs text-slate-100 min-w-[260px]">
         <div class="flex items-center justify-between pb-1.5 border-b border-navy-700 mb-2">
           <strong class="text-cyan-400 text-sm font-black">${inc.id}</strong>
@@ -812,6 +832,7 @@ function stopLaptopWebcam() {
 }
 
 async function openLiveCameraStream(busId = 'BUS-07') {
+  if (!checkRoleAccess('authority')) return;
   DashboardState.activeStreamBus = busId;
   const modal = document.getElementById('camera-stream-modal');
   const title = document.getElementById('stream-modal-bus-title');
@@ -1023,6 +1044,7 @@ async function seedSupabaseDataDirect() {
 // Utility Handlers & Modals
 // ==========================================
 function openCreateIncidentModal() {
+  if (!checkRoleAccess('authority')) return;
   document.getElementById('create-incident-modal')?.classList.remove('hidden');
 }
 function closeCreateIncidentModal() {
@@ -1030,6 +1052,7 @@ function closeCreateIncidentModal() {
 }
 
 function openSupabaseConfigModal() {
+  if (!checkRoleAccess('admin')) return;
   document.getElementById('supabase-config-modal')?.classList.remove('hidden');
 }
 function closeSupabaseConfigModal() {
@@ -1219,29 +1242,263 @@ function filterBusTable() {
 }
 
 // ==========================================
-// Supabase Authentication & Profile Handlers
+// Supabase Authentication & Role-Based Portal Controller
 // ==========================================
 let currentAuthTab = 'signin';
 let currentUserProfile = null;
 
 async function initSupabaseAuth() {
-  if (!supabaseClient) return;
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlRole = urlParams.get('role');
+
+  let profile = await supabaseGetUserProfile();
+
+  if (urlRole && ['admin', 'authority', 'rapid_squad', 'citizen'].includes(urlRole)) {
+    if (!profile) {
+      const defaultProfiles = {
+        admin: { email: 'commissioner@kmcgov.in', full_name: 'Palas Kumar Das', role: 'admin' },
+        authority: { email: 'chief.engineer@pwd.kolkata.gov.in', full_name: 'Chief Engineer Anirban Roy', role: 'authority' },
+        rapid_squad: { email: 'squad01.lead@kmcgov.in', full_name: 'Rapid Squad Leader K. Das', role: 'rapid_squad' },
+        citizen: { email: 'citizen.viewer@kolkata.gov', full_name: 'Citizen Observer', role: 'citizen' }
+      };
+      profile = {
+        id: `usr_${Date.now()}`,
+        user_id: `uid_${urlRole}`,
+        ...defaultProfiles[urlRole]
+      };
+    } else {
+      profile.role = urlRole;
+    }
+    localStorage.setItem('lunaris_auth_profile', JSON.stringify(profile));
+  }
+
+  // If no active session or role in URL, redirect to dedicated login portal
+  if (!profile && !urlRole) {
+    window.location.href = 'login.html';
+    return;
+  }
+
+  currentUserProfile = profile || {
+    email: 'citizen.viewer@kolkata.gov',
+    full_name: 'Citizen Observer',
+    role: 'citizen'
+  };
+
+  updateUserProfileUI(currentUserProfile);
+  applyRoleAccess(currentUserProfile.role);
 
   // Listen to Auth State Changes
-  supabaseClient.auth.onAuthStateChange(async (event, session) => {
-    console.log('[LUNARIS Auth] Event:', event);
-    if (session?.user) {
-      currentUserProfile = await supabaseGetUserProfile();
-      updateUserProfileUI(currentUserProfile);
-    } else {
-      currentUserProfile = null;
-      updateUserProfileUI(null);
-    }
-  });
+  if (supabaseClient) {
+    supabaseClient.auth.onAuthStateChange(async (event, session) => {
+      console.log('[LUNEX Auth] State event:', event);
+      if (session?.user) {
+        currentUserProfile = await supabaseGetUserProfile();
+        updateUserProfileUI(currentUserProfile);
+        if (currentUserProfile?.role) applyRoleAccess(currentUserProfile.role);
+      }
+    });
+  }
+}
 
-  // Initial Profile Check
-  currentUserProfile = await supabaseGetUserProfile();
+function applyRoleAccess(role) {
+  role = (role || 'citizen').toLowerCase();
+
+  // 1. Render Dynamic Role-Based Sidebar
+  renderRoleBasedSidebar(role);
+
+  // 2. Adjust Top Header Badges
   updateUserProfileUI(currentUserProfile);
+
+  // 3. Role-Based Feature Protection
+  const btnPhoneCam = document.getElementById('btn-phone-cam');
+  const btnLiveBusFeed = document.getElementById('btn-live-bus-feed');
+  const btnCreateInc = document.getElementById('btn-create-inc');
+  const fleetSection = document.getElementById('fleet-section');
+
+  if (role === 'citizen') {
+    if (btnPhoneCam) btnPhoneCam.classList.add('hidden');
+    if (btnLiveBusFeed) btnLiveBusFeed.classList.add('hidden');
+    if (btnCreateInc) btnCreateInc.classList.add('hidden');
+    if (fleetSection) fleetSection.classList.add('hidden');
+    if (DashboardState.busesLayer && DashboardState.map) {
+      DashboardState.map.removeLayer(DashboardState.busesLayer);
+    }
+    switchDashboardView('citizen');
+  } else if (role === 'rapid_squad') {
+    if (btnPhoneCam) btnPhoneCam.classList.add('hidden');
+    if (btnLiveBusFeed) btnLiveBusFeed.classList.add('hidden');
+    if (btnCreateInc) btnCreateInc.classList.add('hidden');
+    if (fleetSection) fleetSection.classList.remove('hidden');
+    switchDashboardView('hq');
+  } else if (role === 'authority') {
+    if (btnPhoneCam) btnPhoneCam.classList.add('hidden');
+    if (btnLiveBusFeed) btnLiveBusFeed.classList.add('hidden');
+    if (btnCreateInc) btnCreateInc.classList.remove('hidden');
+    if (fleetSection) fleetSection.classList.remove('hidden');
+    switchDashboardView('hq');
+  } else {
+    // Admin: Full access
+    if (btnPhoneCam) btnPhoneCam.classList.remove('hidden');
+    if (btnLiveBusFeed) btnLiveBusFeed.classList.remove('hidden');
+    if (btnCreateInc) btnCreateInc.classList.remove('hidden');
+    if (fleetSection) fleetSection.classList.remove('hidden');
+    if (DashboardState.busesLayer && DashboardState.map) {
+      DashboardState.busesLayer.addTo(DashboardState.map);
+    }
+    switchDashboardView('hq');
+  }
+}
+
+function renderRoleBasedSidebar(role) {
+  const nav = document.getElementById('sidebar-nav');
+  if (!nav) return;
+
+  if (role === 'admin') {
+    nav.innerHTML = `
+      <a href="#" onclick="switchDashboardView('hq')" class="nav-item active flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-white bg-blue-600/25 border border-blue-500/40 shadow-inner group transition">
+        <i data-lucide="layout-dashboard" class="w-4 h-4 text-cyan-400"></i>
+        <span class="font-bold">Dashboard</span>
+      </a>
+      <a href="live_monitoring.html" target="_blank" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-navy-800/60 transition group border border-transparent">
+        <i data-lucide="tv" class="w-4 h-4 text-slate-400 group-hover:text-cyan-400"></i>
+        <span>Live Monitoring</span>
+      </a>
+      <a href="#map-section" onclick="switchDashboardView('hq')" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-navy-800/60 transition group border border-transparent">
+        <i data-lucide="map" class="w-4 h-4 text-slate-400 group-hover:text-cyan-400"></i>
+        <span>Live Map</span>
+      </a>
+      <a href="mobile_camera.html" target="_blank" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-navy-800/60 transition group border border-transparent">
+        <i data-lucide="cpu" class="w-4 h-4 text-slate-400 group-hover:text-purple-400"></i>
+        <span>AI Detection</span>
+      </a>
+      <a href="#fleet-section" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-navy-800/60 transition group border border-transparent">
+        <i data-lucide="bus" class="w-4 h-4 text-slate-400 group-hover:text-cyan-400"></i>
+        <span>Bus Fleet</span>
+      </a>
+      <a href="live_monitoring.html" target="_blank" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-navy-800/60 transition group border border-transparent">
+        <i data-lucide="video" class="w-4 h-4 text-slate-400 group-hover:text-cyan-400"></i>
+        <span>Cameras</span>
+      </a>
+      <a href="#incidents-section" onclick="openAlertsDrawer()" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-navy-800/60 transition group border border-transparent">
+        <i data-lucide="alert-triangle" class="w-4 h-4 text-slate-400 group-hover:text-amber-400"></i>
+        <span>Incidents</span>
+        <span class="ml-auto text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30" id="sidebar-incident-count">0</span>
+      </a>
+      <a href="#citizen-portal-section" onclick="switchDashboardView('citizen')" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-navy-800/60 transition group border border-transparent">
+        <i data-lucide="file-text" class="w-4 h-4 text-slate-400 group-hover:text-blue-400"></i>
+        <span>Complaints</span>
+      </a>
+      <a href="#kpi-section" onclick="openKpiDrilldownModal('IN_PROGRESS')" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-navy-800/60 transition group border border-transparent">
+        <i data-lucide="wrench" class="w-4 h-4 text-slate-400 group-hover:text-amber-400"></i>
+        <span>Maintenance</span>
+      </a>
+      <a href="#analytics-section" onclick="focusAnalytics()" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-navy-800/60 transition group border border-transparent">
+        <i data-lucide="bar-chart-3" class="w-4 h-4 text-slate-400 group-hover:text-emerald-400"></i>
+        <span>Analytics</span>
+      </a>
+      <a href="#" onclick="openAuthModal()" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-navy-800/60 transition group border border-transparent">
+        <i data-lucide="users" class="w-4 h-4 text-slate-400 group-hover:text-purple-400"></i>
+        <span>Users</span>
+      </a>
+      <a href="#" onclick="openAuthModal()" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-navy-800/60 transition group border border-transparent">
+        <i data-lucide="settings" class="w-4 h-4 text-slate-400 group-hover:text-cyan-400"></i>
+        <span>Settings</span>
+      </a>
+    `;
+  } else if (role === 'authority') {
+    nav.innerHTML = `
+      <a href="#" onclick="switchDashboardView('hq')" class="nav-item active flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-white bg-purple-600/25 border border-purple-500/40 shadow-inner group transition">
+        <i data-lucide="layout-dashboard" class="w-4 h-4 text-purple-400"></i>
+        <span class="font-bold">Dashboard</span>
+      </a>
+      <a href="#map-section" onclick="switchDashboardView('hq')" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-navy-800/60 transition group border border-transparent">
+        <i data-lucide="map" class="w-4 h-4 text-slate-400 group-hover:text-purple-400"></i>
+        <span>Live Map</span>
+      </a>
+      <a href="#incidents-section" onclick="openAlertsDrawer()" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-navy-800/60 transition group border border-transparent">
+        <i data-lucide="alert-triangle" class="w-4 h-4 text-slate-400 group-hover:text-amber-400"></i>
+        <span>Incidents</span>
+        <span class="ml-auto text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30" id="sidebar-incident-count">0</span>
+      </a>
+      <a href="#citizen-portal-section" onclick="switchDashboardView('citizen')" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-navy-800/60 transition group border border-transparent">
+        <i data-lucide="file-text" class="w-4 h-4 text-slate-400 group-hover:text-blue-400"></i>
+        <span>Complaints</span>
+      </a>
+      <a href="#kpi-section" onclick="openKpiDrilldownModal('IN_PROGRESS')" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-navy-800/60 transition group border border-transparent">
+        <i data-lucide="wrench" class="w-4 h-4 text-slate-400 group-hover:text-amber-400"></i>
+        <span>Maintenance</span>
+      </a>
+      <a href="#analytics-section" onclick="focusAnalytics()" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-navy-800/60 transition group border border-transparent">
+        <i data-lucide="bar-chart-3" class="w-4 h-4 text-slate-400 group-hover:text-emerald-400"></i>
+        <span>Analytics</span>
+      </a>
+      <a href="#" onclick="toggleAlertsDropdown()" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-navy-800/60 transition group border border-transparent">
+        <i data-lucide="bell" class="w-4 h-4 text-slate-400 group-hover:text-purple-400"></i>
+        <span>Notifications</span>
+      </a>
+    `;
+  } else if (role === 'rapid_squad') {
+    nav.innerHTML = `
+      <a href="#kpi-section" onclick="openKpiDrilldownModal('IN_PROGRESS')" class="nav-item active flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-white bg-amber-600/25 border border-amber-500/40 shadow-inner group transition">
+        <i data-lucide="briefcase" class="w-4 h-4 text-amber-400"></i>
+        <span class="font-bold">My Jobs</span>
+      </a>
+      <a href="#map-section" onclick="switchDashboardView('hq')" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-navy-800/60 transition group border border-transparent">
+        <i data-lucide="map-pin" class="w-4 h-4 text-slate-400 group-hover:text-amber-400"></i>
+        <span>Map</span>
+      </a>
+      <a href="#kpi-section" onclick="openKpiDrilldownModal('RESOLVED')" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-navy-800/60 transition group border border-transparent">
+        <i data-lucide="camera" class="w-4 h-4 text-slate-400 group-hover:text-cyan-400"></i>
+        <span>Evidence</span>
+      </a>
+      <a href="#kpi-section" onclick="openKpiDrilldownModal('TOTAL')" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-navy-800/60 transition group border border-transparent">
+        <i data-lucide="history" class="w-4 h-4 text-slate-400 group-hover:text-emerald-400"></i>
+        <span>Job History</span>
+      </a>
+      <a href="#" onclick="toggleAlertsDropdown()" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-navy-800/60 transition group border border-transparent">
+        <i data-lucide="bell" class="w-4 h-4 text-slate-400 group-hover:text-amber-400"></i>
+        <span>Notifications</span>
+      </a>
+      <a href="#" onclick="openAuthModal()" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-navy-800/60 transition group border border-transparent">
+        <i data-lucide="user" class="w-4 h-4 text-slate-400 group-hover:text-cyan-400"></i>
+        <span>Profile</span>
+      </a>
+    `;
+  } else {
+    // Citizen
+    nav.innerHTML = `
+      <a href="#map-section" onclick="switchDashboardView('citizen')" class="nav-item active flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-white bg-emerald-600/25 border border-emerald-500/40 shadow-inner group transition">
+        <i data-lucide="map" class="w-4 h-4 text-emerald-400"></i>
+        <span class="font-bold">Public Map</span>
+      </a>
+      <a href="#incidents-section" onclick="openAlertsDrawer()" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-navy-800/60 transition group border border-transparent">
+        <i data-lucide="alert-circle" class="w-4 h-4 text-slate-400 group-hover:text-amber-400"></i>
+        <span>Problems</span>
+      </a>
+      <a href="#map-section" onclick="switchDashboardView('hq'); setMapBaseLayer('traffic');" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-navy-800/60 transition group border border-transparent">
+        <i data-lucide="car" class="w-4 h-4 text-slate-400 group-hover:text-cyan-400"></i>
+        <span>Traffic</span>
+      </a>
+      <a href="#map-section" onclick="switchDashboardView('hq'); filterByDefectType('Waterlogging');" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-navy-800/60 transition group border border-transparent">
+        <i data-lucide="droplet" class="w-4 h-4 text-slate-400 group-hover:text-blue-400"></i>
+        <span>Waterlogging</span>
+      </a>
+      <a href="#kpi-section" onclick="openKpiDrilldownModal('RESOLVED')" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-navy-800/60 transition group border border-transparent">
+        <i data-lucide="check-circle-2" class="w-4 h-4 text-slate-400 group-hover:text-emerald-400"></i>
+        <span>Resolved</span>
+      </a>
+      <a href="#citizen-portal-section" onclick="switchDashboardView('citizen')" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-navy-800/60 transition group border border-transparent">
+        <i data-lucide="megaphone" class="w-4 h-4 text-slate-400 group-hover:text-purple-400"></i>
+        <span>Notices</span>
+      </a>
+      <a href="#" onclick="openAuthModal()" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-navy-800/60 transition group border border-transparent">
+        <i data-lucide="user" class="w-4 h-4 text-slate-400 group-hover:text-cyan-400"></i>
+        <span>Profile</span>
+      </a>
+    `;
+  }
+
+  if (window.lucide) lucide.createIcons();
 }
 
 function updateUserProfileUI(profile) {
@@ -1250,15 +1507,16 @@ function updateUserProfileUI(profile) {
   const avatarEl = document.getElementById('user-avatar-initials');
   const dotEl = document.getElementById('user-online-dot');
 
-  if (profile && profile.user_id) {
+  if (profile) {
+    const role = (profile.role || 'citizen').toLowerCase();
     const initials = profile.full_name
       ? profile.full_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
       : 'U';
 
-    if (nameEl) nameEl.innerText = profile.full_name || profile.email;
+    if (nameEl) nameEl.innerText = profile.full_name || profile.email || 'User';
     if (roleEl) {
-      roleEl.innerText = (profile.role || 'VIEWER').toUpperCase();
-      roleEl.className = getRoleBadgeClass(profile.role);
+      roleEl.innerText = getRoleLabel(role);
+      roleEl.className = getRoleBadgeClass(role);
     }
     if (avatarEl) avatarEl.innerText = initials;
     if (dotEl) {
@@ -1266,31 +1524,60 @@ function updateUserProfileUI(profile) {
     }
 
     // Update modal details
-    document.getElementById('auth-profile-name').innerText = profile.full_name || profile.email;
-    document.getElementById('auth-profile-email').innerText = profile.email;
-    document.getElementById('auth-profile-role').innerText = (profile.role || 'VIEWER').toUpperCase();
-    document.getElementById('auth-profile-avatar').innerText = initials;
-    document.getElementById('auth-profile-uid').innerText = profile.user_id;
-    document.getElementById('auth-profile-db-id').innerText = profile.id || 'Synced';
+    const mName = document.getElementById('auth-profile-name');
+    const mEmail = document.getElementById('auth-profile-email');
+    const mRole = document.getElementById('auth-profile-role');
+    const mAvatar = document.getElementById('auth-profile-avatar');
+    const mUid = document.getElementById('auth-profile-uid');
+    const mDbId = document.getElementById('auth-profile-db-id');
+
+    if (mName) mName.innerText = profile.full_name || profile.email;
+    if (mEmail) mEmail.innerText = profile.email || 'user@kmcgov.in';
+    if (mRole) mRole.innerText = getRoleLabel(role);
+    if (mAvatar) mAvatar.innerText = initials;
+    if (mUid) mUid.innerText = profile.user_id || 'auth_active';
+    if (mDbId) mDbId.innerText = profile.id || 'Supabase_Synced';
   } else {
     if (nameEl) nameEl.innerText = 'Guest (Viewer)';
     if (roleEl) {
-      roleEl.innerText = 'VIEWER';
-      roleEl.className = 'text-[10px] font-mono font-semibold text-slate-400 bg-navy-950 px-1.5 py-0.2 rounded inline-block border border-navy-750 uppercase';
+      roleEl.innerText = '👁️ Citizen Viewer';
+      roleEl.className = 'text-[10px] font-mono font-semibold text-emerald-300 bg-emerald-500/20 px-1.5 py-0.2 rounded inline-block border border-emerald-500/30 uppercase';
     }
     if (avatarEl) avatarEl.innerText = 'GU';
-    if (dotEl) {
-      dotEl.className = 'absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-slate-500 border-2 border-navy-900';
-    }
   }
+}
+
+function getRoleLabel(role) {
+  const r = (role || '').toLowerCase();
+  if (r === 'admin') return '👑 Admin (HQ)';
+  if (r === 'authority') return '🏛️ Authority (PWD)';
+  if (r === 'rapid_squad') return '🔧 Rapid Squad';
+  return '👁️ Citizen Viewer';
 }
 
 function getRoleBadgeClass(role) {
   const r = (role || '').toLowerCase();
-  if (r === 'admin') return 'text-[10px] font-mono font-semibold text-cyan-300 bg-cyan-500/20 px-1.5 py-0.2 rounded inline-block border border-cyan-500/40 uppercase';
-  if (r === 'authority') return 'text-[10px] font-mono font-semibold text-purple-300 bg-purple-500/20 px-1.5 py-0.2 rounded inline-block border border-purple-500/40 uppercase';
-  if (r === 'maintenance') return 'text-[10px] font-mono font-semibold text-amber-300 bg-amber-500/20 px-1.5 py-0.2 rounded inline-block border border-amber-500/40 uppercase';
-  return 'text-[10px] font-mono font-semibold text-emerald-300 bg-emerald-500/20 px-1.5 py-0.2 rounded inline-block border border-emerald-500/40 uppercase';
+  if (r === 'admin') return 'text-[10px] font-mono font-bold text-cyan-300 bg-cyan-500/20 px-2 py-0.5 rounded border border-cyan-500/40 uppercase';
+  if (r === 'authority') return 'text-[10px] font-mono font-bold text-purple-300 bg-purple-500/20 px-2 py-0.5 rounded border border-purple-500/40 uppercase';
+  if (r === 'rapid_squad') return 'text-[10px] font-mono font-bold text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded border border-amber-500/40 uppercase';
+  return 'text-[10px] font-mono font-bold text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded border border-emerald-500/40 uppercase';
+}
+
+function checkRoleAccess(requiredRole) {
+  const currentRole = (currentUserProfile?.role || 'citizen').toLowerCase();
+  if (requiredRole === 'admin' && currentRole !== 'admin') {
+    showToast('🚫 ACCESS DENIED: Administrator HQ privileges required.');
+    return false;
+  }
+  if (requiredRole === 'authority' && currentRole !== 'admin' && currentRole !== 'authority') {
+    showToast('🚫 ACCESS DENIED: PWD Municipal Authority authorization required.');
+    return false;
+  }
+  if (requiredRole === 'rapid_squad' && currentRole !== 'admin' && currentRole !== 'rapid_squad') {
+    showToast('🚫 ACCESS DENIED: Rapid Maintenance Squad authorization required.');
+    return false;
+  }
+  return true;
 }
 
 function openAuthModal() {
@@ -1344,7 +1631,7 @@ async function handleAuthSubmit(event) {
   const email = document.getElementById('auth-input-email').value;
   const password = document.getElementById('auth-input-password').value;
   const fullName = document.getElementById('auth-input-name')?.value || email.split('@')[0];
-  const role = document.getElementById('auth-input-role')?.value || (email.includes('admin') ? 'admin' : 'viewer');
+  const role = document.getElementById('auth-input-role')?.value || (email.includes('admin') ? 'admin' : (email.includes('pwd') ? 'authority' : (email.includes('squad') ? 'rapid_squad' : 'citizen')));
 
   try {
     showToast('Authenticating with Supabase...');
@@ -1357,13 +1644,14 @@ async function handleAuthSubmit(event) {
     };
 
     updateUserProfileUI(currentUserProfile);
+    applyRoleAccess(currentUserProfile.role);
     closeAuthModal();
     showToast(`✅ Logged in as ${currentUserProfile.role.toUpperCase()} (${currentUserProfile.full_name})!`);
   } catch (err) {
-    showToast(`Auth Notice: Logged in as ${role.toUpperCase()}`);
     currentUserProfile = { email, full_name: fullName, role };
     localStorage.setItem('lunaris_auth_profile', JSON.stringify(currentUserProfile));
     updateUserProfileUI(currentUserProfile);
+    applyRoleAccess(currentUserProfile.role);
     closeAuthModal();
   }
 }
@@ -1372,9 +1660,9 @@ async function quickDemoLogin(role = 'admin') {
   const accounts = {
     admin: {
       email: 'commissioner@kmcgov.in',
-      name: 'Commissioner Rajesh Sen',
+      name: 'Palas Kumar Das',
       role: 'admin',
-      roleBadge: 'ADMIN (KMC HQ)'
+      roleBadge: 'ADMIN (HQ)'
     },
     authority: {
       email: 'chief.engineer@pwd.kolkata.gov.in',
@@ -1382,22 +1670,22 @@ async function quickDemoLogin(role = 'admin') {
       role: 'authority',
       roleBadge: 'AUTHORITY (PWD)'
     },
-    maintenance: {
+    rapid_squad: {
       email: 'squad01.lead@kmcgov.in',
       name: 'Rapid Squad Leader K. Das',
-      role: 'maintenance',
-      roleBadge: 'MAINTENANCE SQUAD'
+      role: 'rapid_squad',
+      roleBadge: 'RAPID SQUAD'
     },
-    viewer: {
+    citizen: {
       email: 'citizen.observer@kolkata.gov',
       name: 'Citizen Observer',
-      role: 'viewer',
-      roleBadge: 'PUBLIC VIEWER'
+      role: 'citizen',
+      roleBadge: 'CITIZEN VIEWER'
     }
   };
 
   const selected = accounts[role] || accounts.admin;
-  showToast(`👑 Logging in as ${selected.roleBadge}...`);
+  showToast(`⚡ Direct access as ${selected.roleBadge}...`);
 
   const profile = {
     id: `usr_${Date.now()}`,
@@ -1411,17 +1699,22 @@ async function quickDemoLogin(role = 'admin') {
   currentUserProfile = profile;
 
   updateUserProfileUI(currentUserProfile);
+  applyRoleAccess(selected.role);
   closeAuthModal();
-  showToast(`✅ Welcome back, ${selected.name}! Logged in as ${selected.role.toUpperCase()}.`);
+  showToast(`✅ Welcome, ${selected.name}! Logged in as ${selected.role.toUpperCase()}.`);
 }
 
 async function handleSupabaseSignOut() {
   showToast('Signing out...');
   await supabaseSignOut();
   currentUserProfile = null;
+  localStorage.removeItem('lunaris_auth_profile');
   updateUserProfileUI(null);
   closeAuthModal();
-  showToast('Logged out. Operating in Guest Viewer mode.');
+  showToast('Logged out. Redirecting to Login Portal...');
+  setTimeout(() => {
+    window.location.href = 'login.html';
+  }, 500);
 }
 
 // ==========================================
@@ -2399,6 +2692,7 @@ function openWorkOrderModal() {
     if (coordsEl) coordsEl.innerText = `${inc.lat.toFixed(4)}° N, ${inc.lng.toFixed(4)}° E`;
     if (priorityEl) priorityEl.innerText = inc.severity;
   }
+  if (!checkRoleAccess('authority')) return;
   document.getElementById('work-order-modal')?.classList.remove('hidden');
 }
 function closeWorkOrderModal() {
@@ -2406,6 +2700,7 @@ function closeWorkOrderModal() {
 }
 
 function openPhoneConnectModal() {
+  if (!checkRoleAccess('admin')) return;
   document.getElementById('phone-connect-modal')?.classList.remove('hidden');
 }
 function closePhoneConnectModal() {
