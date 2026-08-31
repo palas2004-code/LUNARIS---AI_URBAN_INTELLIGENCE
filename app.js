@@ -1665,6 +1665,18 @@ function openIncidentDetails(incidentId) {
     if (afterFallback) afterFallback.classList.remove('hidden');
   }
 
+  // Video Clip Evidence
+  const videoContainer = document.getElementById('modal-inc-video-container');
+  const videoPlayer = document.getElementById('modal-inc-video-player');
+  const videoClipUrl = inc.video_url || inc.clip_url || inc.recording_url;
+
+  if (videoClipUrl && videoPlayer && videoContainer) {
+    videoPlayer.src = videoClipUrl;
+    videoContainer.classList.remove('hidden');
+  } else if (videoContainer) {
+    videoContainer.classList.add('hidden');
+  }
+
   const modal = document.getElementById('incident-details-modal');
   if (modal) modal.classList.remove('hidden');
   if (window.lucide) lucide.createIcons();
