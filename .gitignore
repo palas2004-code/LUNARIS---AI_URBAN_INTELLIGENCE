@@ -26,3 +26,9 @@ build/
 # OS specific files
 .DS_Store
 Thumbs.db
+
+# Model training run outputs
+runs/
+ai-detection/runs/
+ai-detection/pothole_dataset/
+

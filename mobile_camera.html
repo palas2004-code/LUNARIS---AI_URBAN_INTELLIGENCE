@@ -328,57 +328,146 @@
       }
     }
 
-    function runAutonomousFrameAnalysis() {
-      const now = Date.now();
-      // Debounce cooldown: minimum 6 seconds between automatic defect captures
-      if (now - MobileState.lastDefectTime < 6000) return;
+    // =========================================================================
+    // REAL AI CONTINUOUS INFERENCE & 3-FRAME CONFIRMATION PIPELINE
+    // Model: LUNEX-POTHOLE-V1 (Ultralytics YOLOv8)
+    // =========================================================================
+    MobileState.consecutiveConfirmations = 0;
+    MobileState.lastConfirmedDefect = null;
 
-      const video = document.getElementById('mobile-video');
-      if (!video || video.videoWidth === 0) return;
+    function startAutoScannerLoop() {
+      if (MobileState.scannerTimer) clearInterval(MobileState.scannerTimer);
+      MobileState.scannerTimer = setInterval(() => {
+        if (!MobileState.autoScanActive) return;
+        runAutonomousFrameAnalysis();
+      }, 1500); // 1.5s inference cycle
+    }
 
-      // Sample frame pixels to detect significant road contrast / defect pattern
-      const canvas = document.createElement('canvas');
-      canvas.width = 64;
-      canvas.height = 36;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    function toggleAutoScanner() {
+      MobileState.autoScanActive = !MobileState.autoScanActive;
+      const btn = document.getElementById('toggle-scanner-btn');
+      const text = document.getElementById('toggle-scanner-text');
+      const badge = document.getElementById('ai-mode-badge');
 
-      let darkPixels = 0;
-      for (let i = 0; i < imgData.data.length; i += 4) {
-        const brightness = (imgData.data[i] + imgData.data[i+1] + imgData.data[i+2]) / 3;
-        if (brightness < 70) darkPixels++;
-      }
-
-      const darkRatio = darkPixels / (canvas.width * canvas.height);
-
-      // If camera detects dark contrast cavity / road anomaly (>12% dark area), trigger defect!
-      if (darkRatio > 0.12) {
-        triggerDefectDetection(false);
+      if (MobileState.autoScanActive) {
+        if (btn) btn.className = 'px-3 py-2 rounded-lg bg-emerald-600/20 text-emerald-300 border border-emerald-500/40 font-bold flex items-center gap-1.5';
+        if (text) text.innerText = 'AUTO SCAN: ON';
+        if (badge) badge.innerText = 'LUNEX-POTHOLE-V1 ACTIVE';
+        showToast('Autonomous AI Scanner Resumed');
+      } else {
+        if (btn) btn.className = 'px-3 py-2 rounded-lg bg-amber-600/20 text-amber-300 border border-amber-500/40 font-bold flex items-center gap-1.5';
+        if (text) text.innerText = 'AUTO SCAN: PAUSED';
+        if (badge) badge.innerText = 'AI PAUSED';
+        showToast('Autonomous AI Scanner Paused');
       }
     }
 
-    async function triggerDefectDetection(isManual = false) {
-      MobileState.lastDefectTime = Date.now();
+    async function runAutonomousFrameAnalysis() {
+      const video = document.getElementById('mobile-video');
+      if (!video || video.videoWidth === 0) return;
 
-      // 1. Show Red YOLO Bounding Box on screen
+      const canvas = document.createElement('canvas');
+      canvas.width = 320;
+      canvas.height = 320;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      canvas.toBlob(async (blob) => {
+        if (!blob) return;
+
+        const formData = new FormData();
+        formData.append('file', blob, 'frame.jpg');
+
+        let data = null;
+        try {
+          // Try local AI microservice port 8001 or web proxy
+          const endpoints = ['http://localhost:8001/api/ai/detect', '/api/ai/detect'];
+          for (const ep of endpoints) {
+            try {
+              const res = await fetch(ep, { method: 'POST', body: formData });
+              if (res.ok) {
+                data = await res.json();
+                break;
+              }
+            } catch (err) {}
+          }
+        } catch (e) {
+          console.debug('AI server connection check:', e);
+        }
+
+        if (data && data.detections && data.detections.length > 0) {
+          // Look for potholes with >= 65% confidence
+          const potholes = data.detections.filter(d => d.class_name === 'pothole' && d.confidence >= 65.0);
+
+          if (potholes.length > 0) {
+            const bestPothole = potholes.sort((a, b) => b.confidence - a.confidence)[0];
+            MobileState.consecutiveConfirmations++;
+            MobileState.lastConfirmedDefect = bestPothole;
+
+            // Render exact bounding box
+            renderAIBoundingBox(bestPothole, MobileState.consecutiveConfirmations);
+
+            // Require 3 consecutive confirmations before creating an incident
+            if (MobileState.consecutiveConfirmations >= 3) {
+              const now = Date.now();
+              if (now - MobileState.lastDefectTime >= 6000) {
+                await triggerDefectDetection(bestPothole);
+              }
+            }
+          } else {
+            MobileState.consecutiveConfirmations = 0;
+            hideAIBoundingBox();
+          }
+        } else {
+          MobileState.consecutiveConfirmations = 0;
+          hideAIBoundingBox();
+        }
+      }, 'image/jpeg', 0.85);
+    }
+
+    function renderAIBoundingBox(det, confirmCount) {
       const box = document.getElementById('yolo-bounding-box');
-      if (box) {
-        box.style.left = `${25 + Math.random() * 20}%`;
-        box.style.top = `${30 + Math.random() * 20}%`;
-        box.style.width = '200px';
-        box.style.height = '120px';
-        box.classList.remove('hidden');
-        setTimeout(() => box.classList.add('hidden'), 4000);
-      }
+      if (!box) return;
 
-      // 2. Play Audio Alert Beep
+      const left = Math.round(det.x_min * 100);
+      const top = Math.round(det.y_min * 100);
+      const width = Math.max(15, Math.round((det.x_max - det.x_min) * 100));
+      const height = Math.max(12, Math.round((det.y_max - det.y_min) * 100));
+
+      box.style.left = `${left}%`;
+      box.style.top = `${top}%`;
+      box.style.width = `${width}%`;
+      box.style.height = `${height}%`;
+
+      const classLabel = document.getElementById('detected-class-label');
+      const depthLabel = document.getElementById('detected-depth-label');
+
+      if (classLabel) classLabel.innerText = `POTHOLE ${det.confidence.toFixed(1)}% [${confirmCount}/3 FRAMES]`;
+      if (depthLabel) depthLabel.innerText = `DEPTH: ${det.estimated_depth_cm || 6.5}cm | ${det.severity || 'HIGH'}`;
+
+      box.classList.remove('hidden');
+    }
+
+    function hideAIBoundingBox() {
+      const box = document.getElementById('yolo-bounding-box');
+      if (box) box.classList.add('hidden');
+    }
+
+    async function triggerDefectDetection(potholeDet) {
+      MobileState.lastDefectTime = Date.now();
+      MobileState.consecutiveConfirmations = 0;
+
+      // 1. Play Audio Alert Beep
       playPhoneAlertTone();
 
-      // 3. Capture Photo Frame with Bounding Box
+      // 2. Capture Photo Frame with exact AI annotations
       const video = document.getElementById('mobile-video');
       const canvas = document.getElementById('snapshot-canvas');
       let photoEvidenceDataUrl = null;
+
+      const conf = potholeDet ? potholeDet.confidence : 85.0;
+      const depth = potholeDet ? potholeDet.estimated_depth_cm : 7.2;
+      const sev = potholeDet ? potholeDet.severity : 'HIGH';
 
       if (video && video.videoWidth > 0) {
         canvas.width = video.videoWidth;
@@ -386,37 +475,42 @@
         const ctx = canvas.getContext('2d');
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        // Draw bounding box on saved evidence frame
-        ctx.strokeStyle = '#ef4444';
-        ctx.lineWidth = 6;
-        ctx.strokeRect(canvas.width * 0.3, canvas.height * 0.4, canvas.width * 0.4, canvas.height * 0.35);
+        // Draw exact bounding box on saved evidence frame
+        const x = (potholeDet ? potholeDet.x_min : 0.3) * canvas.width;
+        const y = (potholeDet ? potholeDet.y_min : 0.4) * canvas.height;
+        const w = ((potholeDet ? potholeDet.x_max - potholeDet.x_min : 0.4)) * canvas.width;
+        const h = ((potholeDet ? potholeDet.y_max - potholeDet.y_min : 0.35)) * canvas.height;
 
-        ctx.fillStyle = '#ef4444';
-        ctx.fillRect(canvas.width * 0.3, (canvas.height * 0.4) - 34, 280, 34);
+        ctx.strokeStyle = sev === 'CRITICAL' ? '#dc2626' : '#ea580c';
+        ctx.lineWidth = 5;
+        ctx.strokeRect(x, y, w, h);
+
+        ctx.fillStyle = sev === 'CRITICAL' ? '#dc2626' : '#ea580c';
+        ctx.fillRect(x, Math.max(0, y - 32), 340, 32);
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 20px monospace';
-        ctx.fillText('POTHOLE 98.4% [CRITICAL]', (canvas.width * 0.3) + 10, (canvas.height * 0.4) - 10);
+        ctx.font = 'bold 18px monospace';
+        ctx.fillText(`LUNEX-POTHOLE-V1: ${conf.toFixed(1)}% (${depth}cm)`, x + 8, Math.max(22, y - 10));
 
         photoEvidenceDataUrl = canvas.toDataURL('image/jpeg', 0.85);
       }
 
-      // 4. Start 3-Second Video Clip Recording using MediaRecorder
+      // 3. Start 3-Second Video Clip Recording using MediaRecorder
       startVideoClipRecording();
 
-      // 5. Dispatch Incident & Detection to Supabase
+      // 4. Dispatch Incident & Detection to Supabase with real telemetry
       const incidentId = `RD-${Math.floor(1000 + Math.random() * 9000)}`;
       const payload = {
         incident_id: incidentId,
-        title: `Auto-Detected Pothole by ${MobileState.busId}`,
+        title: `Auto-Confirmed Pothole by ${MobileState.busId}`,
         category: 'Pothole',
-        severity: 'HIGH',
-        severity_reason: 'Captured automatically by transit edge phone camera + GPS lock',
+        severity: sev,
+        severity_reason: `Confirmed across 3 frames by LUNEX-POTHOLE-V1 AI (Confidence: ${conf.toFixed(1)}%, Est Depth: ${depth}cm)`,
         status: 'DETECTED',
         latitude: MobileState.latitude,
         longitude: MobileState.longitude,
         address: `Live Location (${MobileState.latitude.toFixed(4)}° N, ${MobileState.longitude.toFixed(4)}° E)`,
-        consensus_count: 1,
-        confidence_score: 98.4,
+        consensus_count: 3,
+        confidence_score: conf,
         verified_by_buses: [MobileState.busId],
         before_evidence: photoEvidenceDataUrl,
         assigned_authority: 'Road Maintenance Department',
@@ -428,9 +522,9 @@
           await supabaseClient.from('incidents').insert([payload]);
           await supabaseClient.from('notifications').insert([{
             incident_id: incidentId,
-            title: `🚨 HIGH PRIORITY ROAD DEFECT`,
-            message: `Pothole automatically detected at (${MobileState.latitude.toFixed(4)}, ${MobileState.longitude.toFixed(4)}) by ${MobileState.busId}`,
-            priority: 'HIGH',
+            title: `🚨 ${sev} PRIORITY ROAD DEFECT`,
+            message: `Pothole confirmed at (${MobileState.latitude.toFixed(4)}, ${MobileState.longitude.toFixed(4)}) by ${MobileState.busId} [LUNEX AI ${conf.toFixed(1)}%]`,
+            priority: sev,
             read: false
           }]);
         } catch (e) {
@@ -445,7 +539,7 @@
         setTimeout(() => toast.classList.add('hidden'), 4500);
       }
 
-      showToast(`🎯 ${incidentId} [POTHOLE 98.4%] Dispatched to Live Map!`);
+      showToast(`🎯 ${incidentId} [POTHOLE ${conf.toFixed(1)}%] Confirmed (3/3) & Dispatched!`);
     }
 
     function startVideoClipRecording() {

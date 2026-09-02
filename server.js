@@ -83,6 +83,28 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // 3. AI Service Forwarding Proxy (/api/ai/* -> FastAPI http://127.0.0.1:8001)
+  if (reqPath.startsWith('/api/ai/')) {
+    const aiReq = http.request({
+      hostname: '127.0.0.1',
+      port: 8001,
+      path: req.url,
+      method: req.method,
+      headers: req.headers
+    }, (aiRes) => {
+      res.writeHead(aiRes.statusCode, aiRes.headers);
+      aiRes.pipe(res);
+    });
+
+    aiReq.on('error', (err) => {
+      res.writeHead(503, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'AI Inference Service Offline', details: err.message }));
+    });
+
+    req.pipe(aiReq);
+    return;
+  }
+
   // 3. Static Asset Resolution across Modular Directories
   const targetFile = resolveFilePath(reqPath);
 
