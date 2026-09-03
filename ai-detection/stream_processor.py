@@ -6,6 +6,7 @@ Centroid/IoU defect tracking, multi-frame debouncing (>= 3 frames), and spatial 
 """
 
 import cv2
+import numpy as np
 import time
 import math
 import base64
@@ -79,8 +80,20 @@ class StreamProcessor:
         logger.info(f"Stopped StreamProcessor for {self.bus_id}")
 
     async def _process_loop(self):
-        cap = cv2.VideoCapture(self.stream_url)
-        use_synthetic = not cap.isOpened()
+        loop = asyncio.get_running_loop()
+        def _open_cap():
+            try:
+                c = cv2.VideoCapture(self.stream_url)
+                return c
+            except Exception:
+                return None
+
+        try:
+            cap = await asyncio.wait_for(loop.run_in_executor(None, _open_cap), timeout=1.5)
+            use_synthetic = not (cap and cap.isOpened())
+        except Exception:
+            cap = None
+            use_synthetic = True
 
         frame_count = 0
         target_frame_time = 1.0 / self.inference_fps
@@ -88,7 +101,7 @@ class StreamProcessor:
         while self.is_running:
             t_start = time.time()
 
-            if not use_synthetic and cap.isOpened():
+            if not use_synthetic and cap and cap.isOpened():
                 ret, frame = cap.read()
                 if not ret:
                     cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
@@ -107,12 +120,13 @@ class StreamProcessor:
             # 2. Update Multi-Frame Spatial/Temporal Tracker & Debouncer
             await self._update_tracker_and_debounce(raw_detections, frame)
 
-            # 3. FPS Limiter
+            # 3. FPS Limiter & CPU Cooperative Yielding
             elapsed = time.time() - t_start
-            sleep_time = max(0.001, target_frame_time - elapsed)
+            min_yield = 0.5 if use_synthetic else 0.05
+            sleep_time = max(min_yield, target_frame_time - elapsed)
             await asyncio.sleep(sleep_time)
 
-        if cap.isOpened():
+        if cap and cap.isOpened():
             cap.release()
 
     async def _update_tracker_and_debounce(self, detections: List[Dict[str, Any]], frame):

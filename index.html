@@ -333,7 +333,7 @@
         <section id="kpi-section" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-5">
           
           <!-- Card 1: TOTAL INCIDENTS -->
-          <div onclick="openKpiDrilldownModal('TOTAL')" class="kpi-card group bg-navy-900/90 p-5 md:p-6 rounded-2xl border border-navy-800 hover:border-blue-500/60 shadow-lg relative overflow-hidden transition-all duration-200 hover:-translate-y-0.5 cursor-pointer active:scale-95" title="Click to view all incidents">
+          <div id="kpi-card-total" onclick="openKpiDrilldownModal('TOTAL')" class="kpi-card group bg-navy-900/90 p-5 md:p-6 rounded-2xl border border-navy-800 hover:border-blue-500/60 shadow-lg relative overflow-hidden transition-all duration-200 hover:-translate-y-0.5 cursor-pointer active:scale-95" title="Click to view all incidents">
             <div class="flex items-center justify-between mb-2">
               <span class="text-xs lg:text-sm font-mono uppercase tracking-wider text-slate-300 font-bold group-hover:text-blue-300 transition">TOTAL INCIDENTS</span>
               <div class="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center justify-center">
@@ -343,12 +343,12 @@
             <div class="text-3xl lg:text-4xl font-black text-white tracking-tight font-mono my-2" id="kpi-total-incidents">0</div>
             <div class="flex items-center justify-between text-xs font-mono text-slate-400 pt-2 border-t border-navy-800/60">
               <span class="flex items-center gap-1.5 text-emerald-400 font-semibold"><i data-lucide="database" class="w-3.5 h-3.5"></i> Supabase Synced</span>
-              <span class="text-cyan-400 font-bold group-hover:underline">View &rarr;</span>
+              <button type="button" onclick="event.stopPropagation(); openKpiDrilldownModal('TOTAL')" class="text-cyan-400 hover:text-cyan-300 font-bold group-hover:underline flex items-center gap-1 cursor-pointer">View &rarr;</button>
             </div>
           </div>
 
           <!-- Card 2: CRITICAL ALERTS -->
-          <div onclick="openKpiDrilldownModal('CRITICAL')" class="kpi-card group bg-navy-900/90 p-5 md:p-6 rounded-2xl border border-navy-800 hover:border-red-500/60 shadow-lg relative overflow-hidden transition-all duration-200 hover:-translate-y-0.5 cursor-pointer active:scale-95" title="Click to view critical alerts">
+          <div id="kpi-card-critical" onclick="openKpiDrilldownModal('CRITICAL')" class="kpi-card group bg-navy-900/90 p-5 md:p-6 rounded-2xl border border-navy-800 hover:border-red-500/60 shadow-lg relative overflow-hidden transition-all duration-200 hover:-translate-y-0.5 cursor-pointer active:scale-95" title="Click to view critical alerts">
             <div class="flex items-center justify-between mb-2">
               <span class="text-xs lg:text-sm font-mono uppercase tracking-wider text-slate-300 font-bold group-hover:text-red-300 transition">CRITICAL ALERTS</span>
               <div class="w-9 h-9 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20 flex items-center justify-center">
@@ -358,12 +358,12 @@
             <div class="text-3xl lg:text-4xl font-black text-red-500 tracking-tight font-mono my-2" id="kpi-critical">0</div>
             <div class="flex items-center justify-between text-xs font-mono text-slate-400 pt-2 border-t border-navy-800/60">
               <span class="flex items-center gap-1.5 text-red-400 font-semibold"><i data-lucide="zap" class="w-3.5 h-3.5"></i> Urgent Action</span>
-              <span class="text-red-400 font-bold group-hover:underline">View &rarr;</span>
+              <button type="button" onclick="event.stopPropagation(); openKpiDrilldownModal('CRITICAL')" class="text-red-400 hover:text-red-300 font-bold group-hover:underline flex items-center gap-1 cursor-pointer">View &rarr;</button>
             </div>
           </div>
 
           <!-- Card 3: ACTIVE BUSES -->
-          <div onclick="openKpiDrilldownModal('BUSES')" class="kpi-card group bg-navy-900/90 p-5 md:p-6 rounded-2xl border border-navy-800 hover:border-cyan-500/60 shadow-lg relative overflow-hidden transition-all duration-200 hover:-translate-y-0.5 cursor-pointer active:scale-95" title="Click to view active bus fleet">
+          <div id="kpi-card-buses" onclick="openKpiDrilldownModal('BUSES')" class="kpi-card group bg-navy-900/90 p-5 md:p-6 rounded-2xl border border-navy-800 hover:border-cyan-500/60 shadow-lg relative overflow-hidden transition-all duration-200 hover:-translate-y-0.5 cursor-pointer active:scale-95" title="Click to view active bus fleet">
             <div class="flex items-center justify-between mb-2">
               <span class="text-xs lg:text-sm font-mono uppercase tracking-wider text-slate-300 font-bold group-hover:text-cyan-300 transition">ACTIVE BUSES</span>
               <div class="w-9 h-9 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex items-center justify-center">
@@ -373,12 +373,12 @@
             <div class="text-3xl lg:text-4xl font-black text-white tracking-tight font-mono my-2" id="kpi-buses">4</div>
             <div class="flex items-center justify-between text-xs font-mono text-slate-400 pt-2 border-t border-navy-800/60">
               <span class="flex items-center gap-1.5 text-cyan-400 font-semibold"><i data-lucide="wifi" class="w-3.5 h-3.5"></i> Fleet Telemetry</span>
-              <span class="text-cyan-400 font-bold group-hover:underline">View &rarr;</span>
+              <button type="button" onclick="event.stopPropagation(); openKpiDrilldownModal('BUSES')" class="text-cyan-400 hover:text-cyan-300 font-bold group-hover:underline flex items-center gap-1 cursor-pointer">View &rarr;</button>
             </div>
           </div>
 
           <!-- Card 4: RESOLVED TODAY -->
-          <div onclick="openKpiDrilldownModal('RESOLVED')" class="kpi-card group bg-navy-900/90 p-5 md:p-6 rounded-2xl border border-navy-800 hover:border-emerald-500/60 shadow-lg relative overflow-hidden transition-all duration-200 hover:-translate-y-0.5 cursor-pointer active:scale-95" title="Click to view resolved incidents">
+          <div id="kpi-card-resolved" onclick="openKpiDrilldownModal('RESOLVED')" class="kpi-card group bg-navy-900/90 p-5 md:p-6 rounded-2xl border border-navy-800 hover:border-emerald-500/60 shadow-lg relative overflow-hidden transition-all duration-200 hover:-translate-y-0.5 cursor-pointer active:scale-95" title="Click to view resolved incidents">
             <div class="flex items-center justify-between mb-2">
               <span class="text-xs lg:text-sm font-mono uppercase tracking-wider text-slate-300 font-bold group-hover:text-emerald-300 transition">RESOLVED TODAY</span>
               <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center">
@@ -388,12 +388,12 @@
             <div class="text-3xl lg:text-4xl font-black text-emerald-400 tracking-tight font-mono my-2" id="kpi-resolved">0</div>
             <div class="flex items-center justify-between text-xs font-mono text-slate-400 pt-2 border-t border-navy-800/60">
               <span class="flex items-center gap-1.5 text-emerald-400 font-semibold"><i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Verified Fixes</span>
-              <span class="text-emerald-400 font-bold group-hover:underline">View &rarr;</span>
+              <button type="button" onclick="event.stopPropagation(); openKpiDrilldownModal('RESOLVED')" class="text-emerald-400 hover:text-emerald-300 font-bold group-hover:underline flex items-center gap-1 cursor-pointer">View &rarr;</button>
             </div>
           </div>
 
           <!-- Card 5: IN PROGRESS -->
-          <div onclick="openKpiDrilldownModal('IN_PROGRESS')" class="kpi-card group bg-navy-900/90 p-5 md:p-6 rounded-2xl border border-navy-800 hover:border-amber-500/60 shadow-lg relative overflow-hidden transition-all duration-200 hover:-translate-y-0.5 cursor-pointer active:scale-95" title="Click to view defects under active repair">
+          <div id="kpi-card-inprogress" onclick="openKpiDrilldownModal('IN_PROGRESS')" class="kpi-card group bg-navy-900/90 p-5 md:p-6 rounded-2xl border border-navy-800 hover:border-amber-500/60 shadow-lg relative overflow-hidden transition-all duration-200 hover:-translate-y-0.5 cursor-pointer active:scale-95" title="Click to view defects under active repair">
             <div class="flex items-center justify-between mb-2">
               <span class="text-xs lg:text-sm font-mono uppercase tracking-wider text-slate-300 font-bold group-hover:text-amber-300 transition">IN PROGRESS</span>
               <div class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center">
@@ -403,7 +403,7 @@
             <div class="text-3xl lg:text-4xl font-black text-amber-400 tracking-tight font-mono my-2" id="kpi-inprogress">0</div>
             <div class="flex items-center justify-between text-xs font-mono text-slate-400 pt-2 border-t border-navy-800/60">
               <span class="flex items-center gap-1.5 text-amber-400 font-semibold"><i data-lucide="loader" class="w-3.5 h-3.5 animate-spin-slow"></i> Active Crews</span>
-              <span class="text-amber-400 font-bold group-hover:underline">View &rarr;</span>
+              <button type="button" onclick="event.stopPropagation(); openKpiDrilldownModal('IN_PROGRESS')" class="text-amber-400 hover:text-amber-300 font-bold group-hover:underline flex items-center gap-1 cursor-pointer">View &rarr;</button>
             </div>
           </div>
 
@@ -1364,7 +1364,7 @@
   </div>
 
   <!-- Modal 7: KPI Drilldown Modal (Detailed Metric Inspector) -->
-  <div id="kpi-drilldown-modal" class="fixed inset-0 bg-navy-950/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+  <div id="kpi-drilldown-modal" style="z-index: 99999;" class="fixed inset-0 bg-navy-950/85 backdrop-blur-md z-[99999] hidden flex items-center justify-center p-4 overflow-y-auto">
     <div class="bg-navy-900 border border-navy-750 rounded-2xl max-w-4xl w-full p-6 shadow-2xl animate-scaleUp font-mono text-xs">
       
       <!-- Modal Header -->
@@ -1970,7 +1970,31 @@
   <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- App Logic Scripts -->
-  <script src="supabaseClient.js?v=5.0"></script>
-  <script src="app.js?v=5.0"></script>
+  <script src="supabaseClient.js?v=7.0"></script>
+  <script src="app.js?v=7.0"></script>
+
+  <!-- Robust Fallback Click Dispatcher for KPI Metric Cards -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const kpiCardBindings = [
+        { id: 'kpi-card-total', type: 'TOTAL' },
+        { id: 'kpi-card-critical', type: 'CRITICAL' },
+        { id: 'kpi-card-buses', type: 'BUSES' },
+        { id: 'kpi-card-resolved', type: 'RESOLVED' },
+        { id: 'kpi-card-inprogress', type: 'IN_PROGRESS' }
+      ];
+
+      kpiCardBindings.forEach(({ id, type }) => {
+        const cardEl = document.getElementById(id);
+        if (cardEl) {
+          cardEl.addEventListener('click', (e) => {
+            if (typeof window.openKpiDrilldownModal === 'function') {
+              window.openKpiDrilldownModal(type);
+            }
+          });
+        }
+      });
+    });
+  </script>
 </body>
 </html>

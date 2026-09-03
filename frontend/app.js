@@ -4097,11 +4097,19 @@ function openKpiDrilldownModal(metricType) {
 
   listEl.innerHTML = itemsHtml;
   modal.classList.remove('hidden');
+  modal.style.setProperty('display', 'flex', 'important');
+  modal.style.setProperty('z-index', '99999', 'important');
+  modal.style.setProperty('visibility', 'visible', 'important');
+  modal.style.setProperty('opacity', '1', 'important');
   if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
 }
 
 function closeKpiDrilldownModal() {
-  document.getElementById('kpi-drilldown-modal')?.classList.add('hidden');
+  const modal = document.getElementById('kpi-drilldown-modal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.style.setProperty('display', 'none', 'important');
+  }
 }
 
 /**

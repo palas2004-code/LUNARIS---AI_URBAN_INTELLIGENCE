@@ -27,9 +27,7 @@ processors = {
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Start processors
-    for p in processors.values():
-        await p.start()
+    # Processors are ready to stream on demand
     yield
     # Shutdown
     for p in processors.values():
@@ -51,7 +49,7 @@ app.add_middleware(
 )
 
 @app.get("/")
-def root():
+async def root():
     return {
         "service": "LUNARIS Edge AI Service",
         "status": "ONLINE",
@@ -64,7 +62,7 @@ def root():
     }
 
 @app.get("/api/ai/health")
-def ai_health():
+async def ai_health():
     return {
         "status": "ONLINE",
         "model_loaded": detector.is_loaded,
@@ -86,6 +84,9 @@ async def video_feed(bus_id: str):
     processor = processors.get(bus_id.upper())
     if not processor:
         processor = processors["BUS-07"]
+
+    if not processor.is_running:
+        await processor.start()
 
     async def frame_generator():
         while True:
